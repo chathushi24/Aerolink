@@ -62,7 +62,7 @@ resource "aws_route_table" "public" {
   vpc_id = aws_vpc.this.id
 
   route {
-    cidr_block = "0.0.0.0/20" # routing outbound
+    cidr_block = "0.0.0.0/0" # routing outbound
     gateway_id = aws_internet_gateway.this.id
   }
 
