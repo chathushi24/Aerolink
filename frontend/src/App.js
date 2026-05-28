@@ -359,7 +359,7 @@ function FlightCatalog() {
 
       {/* Flights Listing Cards */}
       <div className="flights-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
-        {flights.map(fl => (
+        {Array.isArray(flights) && flights.map(fl => (
           <div key={fl.flight_id} className="flight-card">
             <div className="flight-card-header">
               <span className="flight-number">{fl.flight_number}</span>
@@ -603,7 +603,7 @@ function PassengerBookings() {
               </tr>
             </thead>
             <tbody>
-              {bookings.map(bk => (
+              {Array.isArray(bookings) && bookings.map(bk => (
                 <tr key={bk.booking_id} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                   <td style={{ padding: '1rem', fontFamily: 'monospace', fontSize: '0.8rem' }}>{bk.booking_id}</td>
                   <td style={{ padding: '1rem', fontFamily: 'monospace', fontSize: '0.8rem' }}>{bk.flight_id}</td>
@@ -664,7 +664,7 @@ function BaggageTracking() {
 
       {error && <div className="alert error">{error}</div>}
 
-      {baggageLogs.map(bag => (
+      {Array.isArray(baggageLogs) && baggageLogs.map(bag => (
         <div key={bag.baggage_id} className="bag-status-card" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid var(--border-glass)', borderRadius: '12px', padding: '1.5rem', marginTop: '1rem' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
             <span><strong>Bag Reference:</strong> {bag.baggage_id}</span>
@@ -745,7 +745,7 @@ function NotificationLogs() {
         <p>No messages gathered yet. Start a flight booking to trigger notifications.</p>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {notifications.map(not => (
+          {Array.isArray(notifications) && notifications.map(not => (
             <div key={not.notification_id} style={{ padding: '1rem', background: 'rgba(255,255,255,0.03)', borderLeft: '4px solid var(--accent-primary)', borderRadius: '0 8px 8px 0', border: '1px solid var(--border-glass)', borderLeftWidth: '4px' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'var(--text-secondary)', marginBottom: '0.5rem' }}>
                 <strong>{not.event_type}</strong>
@@ -905,7 +905,7 @@ function AdminFlightManager() {
         <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.85rem' }}>Apply dynamic prices or schedule alerts for passenger bookings</p>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-          {flights.map(fl => (
+          {Array.isArray(flights) && flights.map(fl => (
             <div key={fl.flight_id} style={{ display: 'flex', justifyContent: 'space-between', padding: '1rem', background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-glass)', borderRadius: '8px' }}>
               <div>
                 <h3>{fl.flight_number} ({fl.origin} → {fl.destination})</h3>
