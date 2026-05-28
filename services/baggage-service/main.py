@@ -72,32 +72,40 @@ def sqs_baggage_consumer():
                         booking_id = event_data.get("booking_id")
                         passenger_id = event_data.get("passenger_id")
                         
-                        logger.info(f"Auto-initializing baggage in AWS. Booking: {booking_id}")
-                        
-                        baggage_id = f"bag-{uuid.uuid4().hex[:10]}"
-                        last_updated = datetime.now(timezone.utc).isoformat()
-                        
-                        bag_item = {
-                            "baggage_id": baggage_id,
-                            "booking_id": booking_id,
-                            "passenger_id": passenger_id,
-                            "current_status": "CHECKED_IN",
-                            "last_updated": last_updated,
-                            "location": "JFK_DEPARTURE_TERMINAL"
-                        }
-                        
                         table = get_baggage_table()
-                        table.put_item(Item=bag_item)
-                        logger.info(f"Auto-registered baggage: {baggage_id}")
+                        existing = table.query(
+                            IndexName="BookingIndex",
+                            KeyConditionExpression=Key("booking_id").eq(booking_id)
+                        )
                         
-                        # Publish baggage event
-                        publish_event("BaggageStatusUpdated", {
-                            "baggage_id": baggage_id,
-                            "booking_id": booking_id,
-                            "passenger_id": passenger_id,
-                            "current_status": "CHECKED_IN",
-                            "location": "JFK_DEPARTURE_TERMINAL"
-                        })
+                        if existing.get("Items"):
+                            logger.info(f"Baggage already initialized for booking {booking_id}. Skipping duplicate.")
+                        else:
+                            logger.info(f"Auto-initializing baggage in AWS. Booking: {booking_id}")
+                            
+                            baggage_id = f"bag-{uuid.uuid4().hex[:10]}"
+                            last_updated = datetime.now(timezone.utc).isoformat()
+                            
+                            bag_item = {
+                                "baggage_id": baggage_id,
+                                "booking_id": booking_id,
+                                "passenger_id": passenger_id,
+                                "current_status": "CHECKED_IN",
+                                "last_updated": last_updated,
+                                "location": "JFK_DEPARTURE_TERMINAL"
+                            }
+                            
+                            table.put_item(Item=bag_item)
+                            logger.info(f"Auto-registered baggage: {baggage_id}")
+                            
+                            # Publish baggage event
+                            publish_event("BaggageStatusUpdated", {
+                                "baggage_id": baggage_id,
+                                "booking_id": booking_id,
+                                "passenger_id": passenger_id,
+                                "current_status": "CHECKED_IN",
+                                "location": "JFK_DEPARTURE_TERMINAL"
+                            })
                         
                 except Exception as parse_error:
                     logger.error(f"Error parsing SQS baggage message body: {str(parse_error)}")
