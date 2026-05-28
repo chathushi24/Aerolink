@@ -28,6 +28,6 @@ variable "min_size" {
 
 variable "instance_types" {
   type        = list(string)
-  default     = ["t3.medium"]
+  default     = ["t3.small"]
   description = "Node instances machine specifications"
 }
