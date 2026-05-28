@@ -26,7 +26,7 @@ jobs:
     - name: Install Pytest & Service dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pytest httpx fastapi pydantic boto3 pyjwt passlib bcrypt cryptography
+        pip install pytest httpx fastapi pydantic boto3 pyjwt bcrypt cryptography
         
     - name: Execute Pytest Backend Unit Tests
       run: |
