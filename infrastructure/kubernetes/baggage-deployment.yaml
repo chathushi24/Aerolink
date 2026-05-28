@@ -6,7 +6,7 @@ metadata:
   labels:
     app: baggage-service
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
       app: baggage-service
