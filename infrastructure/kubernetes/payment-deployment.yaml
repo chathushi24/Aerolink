@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: payment-service
-        image: <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/dev-aerolink-payment-service:latest
+        image: 146697354183.dkr.ecr.us-east-1.amazonaws.com/dev-aerolink-payment-service:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8004
@@ -27,7 +27,7 @@ spec:
         - name: PAYMENTS_TABLE_NAME
           value: "dev-PaymentsTable"
         - name: SQS_PAYMENT_GATEWAY_QUEUE_URL
-          value: "https://sqs.us-east-1.amazonaws.com/<AWS_ACCOUNT_ID>/dev-aerolink-PaymentGatewayQueue"
+          value: "https://sqs.us-east-1.amazonaws.com/146697354183/dev-aerolink-PaymentGatewayQueue"
         - name: JWT_SECRET
           value: "aerolink-super-secret-jwt-key-2026"
         livenessProbe:

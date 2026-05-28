@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/dev-aerolink-frontend:latest
+        image: 146697354183.dkr.ecr.us-east-1.amazonaws.com/dev-aerolink-frontend:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 80

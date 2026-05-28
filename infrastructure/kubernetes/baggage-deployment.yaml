@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: baggage-service
-        image: <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/dev-aerolink-baggage-service:latest
+        image: 146697354183.dkr.ecr.us-east-1.amazonaws.com/dev-aerolink-baggage-service:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8005
@@ -27,7 +27,7 @@ spec:
         - name: BAGGAGE_TABLE_NAME
           value: "dev-BaggageTable"
         - name: SQS_BAGGAGE_PROCESSING_QUEUE_URL
-          value: "https://sqs.us-east-1.amazonaws.com/<AWS_ACCOUNT_ID>/dev-aerolink-BaggageProcessingQueue"
+          value: "https://sqs.us-east-1.amazonaws.com/146697354183/dev-aerolink-BaggageProcessingQueue"
         - name: JWT_SECRET
           value: "aerolink-super-secret-jwt-key-2026"
         livenessProbe:

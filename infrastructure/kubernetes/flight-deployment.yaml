@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: flight-service
-        image: <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/dev-aerolink-flight-service:latest
+        image: 146697354183.dkr.ecr.us-east-1.amazonaws.com/dev-aerolink-flight-service:latest
         imagePullPolicy: Always
         ports:
         - containerPort: 8002
@@ -27,7 +27,7 @@ spec:
         - name: FLIGHTS_TABLE_NAME
           value: "dev-FlightsTable"
         - name: SQS_FLIGHT_SEATS_QUEUE_URL
-          value: "https://sqs.us-east-1.amazonaws.com/<AWS_ACCOUNT_ID>/dev-aerolink-FlightSeatsQueue"
+          value: "https://sqs.us-east-1.amazonaws.com/146697354183/dev-aerolink-FlightSeatsQueue"
         - name: JWT_SECRET
           value: "aerolink-super-secret-jwt-key-2026"
         livenessProbe:
