@@ -56,10 +56,10 @@ export default function App() {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, setToken, logout, getAxiosConfig, activeTab, setActiveTab }}>
+    <AuthContext.Provider value={{ user, token, setToken, logout, getAxiosConfig, activeTab, setActiveTab, authView, setAuthView }}>
       <div className="app-container">
         {/* Modern Header Navigation */}
-        <header className="main-header glass-panel">
+        <header className="main-header">
           <div className="header-brand">
             <span className="brand-logo">✈</span>
             <h1>AeroLink</h1>
@@ -212,7 +212,7 @@ function AuthPanel({ authView, setAuthView }) {
    COMPONENT: FLIGHT SEARCH & BOOKING CHECKOUT
    ========================================================================== */
 function FlightCatalog() {
-  const { user, getAxiosConfig, setActiveTab } = useContext(AuthContext);
+  const { user, getAxiosConfig, setActiveTab, setAuthView } = useContext(AuthContext);
   const [flights, setFlights] = useState([]);
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
@@ -301,32 +301,56 @@ function FlightCatalog() {
 
   return (
     <div className="flights-catalog animated-entry">
-      <div className="section-title">
-        <h2>Global Route Network</h2>
-        <p>Search real-time flight listings across global destinations</p>
+      {/* Premium Hero Banner */}
+      <div className="hero-banner">
+        <div className="hero-bg" style={{ backgroundImage: 'url(/airplane_hero.png)' }}></div>
+        <div className="hero-overlay"></div>
+        <div className="hero-content">
+          <h2>Elevate Your Journey</h2>
+          <p>Experience signature high-altitude comfort, global destination mapping, and instant checked-baggage transit intelligence. Designed for the modern elite traveler.</p>
+          <div className="hero-badges">
+            <div className="hero-badge-item">
+              <span className="hero-badge-icon">✓</span> 5-Star Comfort
+            </div>
+            <div className="hero-badge-item">
+              <span className="hero-badge-icon">✓</span> Smart SQS Tracking
+            </div>
+            <div className="hero-badge-item">
+              <span className="hero-badge-icon">✓</span> Flexible Sectors
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Flight Search Panel */}
-      <form onSubmit={handleSearch} className="search-bar glass-panel" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr)) 100px', gap: '1rem', marginBottom: '2rem' }}>
-        <div className="form-group" style={{ marginBottom: 0 }}>
-          <label style={{ fontSize: '0.8rem' }}>Origin IATA</label>
-          <input className="glass-input" type="text" placeholder="e.g. JFK" value={origin} onChange={e => setOrigin(e.target.value)} maxLength={3} />
-        </div>
-        <div className="form-group" style={{ marginBottom: 0 }}>
-          <label style={{ fontSize: '0.8rem' }}>Destination IATA</label>
-          <input className="glass-input" type="text" placeholder="e.g. LHR" value={destination} onChange={e => setDestination(e.target.value)} maxLength={3} />
-        </div>
-        <div className="form-group" style={{ marginBottom: 0 }}>
-          <label style={{ fontSize: '0.8rem' }}>Travel Date</label>
-          <input className="glass-input" type="date" value={date} onChange={e => setDate(e.target.value)} />
-        </div>
-        <button className="glass-button" type="submit" style={{ alignSelf: 'end', height: '42px' }}>Search</button>
-      </form>
+      {/* Floating Flight Search Panel */}
+      <div className="search-widget-container">
+        <form onSubmit={handleSearch} className="search-bar" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr)) 120px', gap: '1.25rem', alignItems: 'center' }}>
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label style={{ fontSize: '0.8rem' }}>Origin IATA</label>
+            <input className="glass-input" type="text" placeholder="e.g. JFK" value={origin} onChange={e => setOrigin(e.target.value)} maxLength={3} />
+          </div>
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label style={{ fontSize: '0.8rem' }}>Destination IATA</label>
+            <input className="glass-input" type="text" placeholder="e.g. LHR" value={destination} onChange={e => setDestination(e.target.value)} maxLength={3} />
+          </div>
+          <div className="form-group" style={{ marginBottom: 0 }}>
+            <label style={{ fontSize: '0.8rem' }}>Travel Date</label>
+            <input className="glass-input" type="date" value={date} onChange={e => setDate(e.target.value)} />
+          </div>
+          <button className="glass-button" type="submit" style={{ alignSelf: 'end', height: '48px' }}>Search</button>
+        </form>
+      </div>
 
-      {/* Flights Listing Table */}
+      {/* Flights Grid Header */}
+      <div className="section-title">
+        <h2>Global Route Network</h2>
+        <p>Real-time sector listings across available global destinations</p>
+      </div>
+
+      {/* Flights Listing Cards */}
       <div className="flights-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
         {flights.map(fl => (
-          <div key={fl.flight_id} className="flight-card glass-panel">
+          <div key={fl.flight_id} className="flight-card">
             <div className="flight-card-header">
               <span className="flight-number">{fl.flight_number}</span>
               <span className={`flight-status ${fl.status.toLowerCase()}`}>{fl.status}</span>
@@ -356,13 +380,105 @@ function FlightCatalog() {
               </div>
             </div>
             <div className="flight-card-footer">
-              <h2 className="price">${fl.price}</h2>
+              <h2 className="price">{fl.price}</h2>
               <button className="glass-button" onClick={() => startBooking(fl)} disabled={fl.available_seats === 0}>
                 {fl.available_seats === 0 ? 'Sold Out' : 'Book Ticket'}
               </button>
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Featured Destinations */}
+      <div className="destinations-section">
+        <div className="section-title">
+          <h2>Inspiring Journeys</h2>
+          <p>Explore our highly curated selection of premier destinations</p>
+        </div>
+        <div className="destinations-grid">
+          <div className="destination-card">
+            <div className="destination-img" style={{ backgroundImage: 'url(/tokyo_destination.png)' }}></div>
+            <div className="destination-overlay"></div>
+            <span className="destination-tag">Trending</span>
+            <div className="destination-info">
+              <h3>Tokyo, Japan</h3>
+              <p className="destination-desc">A mesmerizing blend of ancient temples, neon-lit skyscrapers, and world-renowned culinary masteries.</p>
+              <div className="destination-footer">
+                <div className="destination-price">Fares From<span>$840</span></div>
+                <button className="glass-button secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} onClick={() => { setOrigin('JFK'); setDestination('NRT'); fetchFlights(); }}>Explore Flights</button>
+              </div>
+            </div>
+          </div>
+          <div className="destination-card">
+            <div className="destination-img" style={{ backgroundImage: 'url(/cabin_crew.png)' }}></div>
+            <div className="destination-overlay"></div>
+            <span className="destination-tag" style={{ background: 'linear-gradient(135deg, #a855f7 0%, #ec4899 100%)' }}>Award Winning</span>
+            <div className="destination-info">
+              <h3>Signature Comfort</h3>
+              <p className="destination-desc">Indulge in premium multi-course menus, high-speed Wi-Fi, and personalized stewardess care.</p>
+              <div className="destination-footer">
+                <div className="destination-price">Cabin Upgrades<span>Included</span></div>
+                <button className="glass-button" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} onClick={() => { setActiveTab('auth'); setAuthView('register'); }}>Join Elite Club</button>
+              </div>
+            </div>
+          </div>
+          <div className="destination-card">
+            <div className="destination-img" style={{ backgroundImage: 'linear-gradient(135deg, #1e1b4b 0%, #311042 100%)' }}></div>
+            <div className="destination-overlay"></div>
+            <span className="destination-tag">Popular</span>
+            <div className="destination-info">
+              <h3>London, UK</h3>
+              <p className="destination-desc">Discover the historic charm, scenic royal parks, and iconic architectural marvels along the River Thames.</p>
+              <div className="destination-footer">
+                <div className="destination-price">Fares From<span>$620</span></div>
+                <button className="glass-button secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }} onClick={() => { setOrigin('JFK'); setDestination('LHR'); fetchFlights(); }}>Explore Flights</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Quotes & Testimonials Section */}
+      <div className="testimonials-section">
+        <div className="section-title">
+          <h2>Traveler Testimonials</h2>
+          <p>Real voices from our passenger circle on their recent journeys</p>
+        </div>
+        <div className="testimonials-grid">
+          <div className="testimonial-card glass-panel">
+            <div className="rating-stars">★★★★★</div>
+            <p className="testimonial-quote">"The Checked Baggage Barcode Tracker is incredibly reassuring. I knew exactly where my bags were from check-in to luggage claim. Simply outstanding!"</p>
+            <div className="testimonial-author">
+              <div className="author-avatar">LM</div>
+              <div className="author-info">
+                <h4>Lucas Miller</h4>
+                <p>Verified Passenger • JFK to LHR</p>
+              </div>
+            </div>
+          </div>
+          <div className="testimonial-card glass-panel">
+            <div className="rating-stars">★★★★★</div>
+            <p className="testimonial-quote">"Booking premium class seats with AeroLink was a breeze. Elegant styling, clear pricing scales, and signature warm cabin care."</p>
+            <div className="testimonial-author">
+              <div className="author-avatar">SC</div>
+              <div className="author-info">
+                <h4>Sophia Chen</h4>
+                <p>Business Elite Club • JFK to NRT</p>
+              </div>
+            </div>
+          </div>
+          <div className="testimonial-card glass-panel">
+            <div className="rating-stars">★★★★★</div>
+            <p className="testimonial-quote">"Operational rescheduling and notifications were delivered in real-time. Extremely professional ground-ops and digital platforms!"</p>
+            <div className="testimonial-author">
+              <div className="author-avatar">MD</div>
+              <div className="author-info">
+                <h4>Marcus Vance</h4>
+                <p>Frequent Flyer • ORD to LAX</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Checkout Modal overlay */}
