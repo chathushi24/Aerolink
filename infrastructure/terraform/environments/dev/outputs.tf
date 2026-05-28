@@ -3,21 +3,21 @@ output "vpc_id" {
 }
 
 output "eks_cluster_endpoint" {
-  value = aws_eks_cluster.eks.endpoint
+  value = module.eks.cluster_endpoint
 }
 
 output "eks_cluster_name" {
-  value = aws_eks_cluster.eks.name
+  value = module.eks.cluster_name
 }
 
 output "cognito_user_pool_id" {
-  value = aws_cognito_user_pool.pool.id
+  value = module.cognito.user_pool_id
 }
 
 output "cognito_client_id" {
-  value = aws_cognito_user_pool_client.client.id
+  value = module.cognito.client_id
 }
 
 output "cloudfront_domain_name" {
-  value = aws_cloudfront_distribution.cdn.domain_name
+  value = module.s3_cloudfront.cloudfront_domain_name
 }

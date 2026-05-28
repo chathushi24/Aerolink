@@ -43,7 +43,7 @@ resource "aws_iam_role_policy_attachment" "lambda" {
 
 data "archive_file" "lambda_zip" {
   type        = "zip"
-  source_file = "${path.module}/../../aws/lambda/notification_processor.py"
+  source_file = "${path.module}/../../../aws/lambda/notification_processor.py"
   output_path = "${path.module}/notification_processor.zip"
 }
 
