@@ -30,6 +30,16 @@ spec:
           value: "https://sqs.us-east-1.amazonaws.com/146697354183/dev-aerolink-BookingResolutionQueue"
         - name: JWT_SECRET
           value: "aerolink-super-secret-jwt-key-2026"
+        - name: AWS_ACCESS_KEY_ID
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: AWS_ACCESS_KEY_ID
+        - name: AWS_SECRET_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: aws-credentials
+              key: AWS_SECRET_ACCESS_KEY
         livenessProbe:
           httpGet:
             path: /health
@@ -44,11 +54,11 @@ spec:
           periodSeconds: 5
         resources:
           limits:
-            cpu: "500m"
-            memory: "512Mi"
+            cpu: "200m"
+            memory: "128Mi"
           requests:
-            cpu: "250m"
-            memory: "256Mi"
+            cpu: "50m"
+            memory: "64Mi"
 ---
 apiVersion: v1
 kind: Service
