@@ -6,7 +6,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: 'https://github.com/<GITHUB_USERNAME>/aerolink-platform.git'
+    repoURL: 'https://github.com/chathushi24/Aerolink.git'
     targetRevision: HEAD
     path: infrastructure/kubernetes
   destination:
