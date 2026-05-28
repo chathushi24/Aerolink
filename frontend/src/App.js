@@ -1,14 +1,17 @@
 import React, { useState, useEffect, createContext, useContext } from 'react';
 import axios from 'axios';
 
-// API BASE URL Config (Local Development Fallback)
+// Detect if running on localhost for local development fallback
+const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
+// API BASE URL Config (Dynamic pathing for AWS ALB Ingress routing)
 const API_URLS = {
-  auth: process.env.REACT_APP_AUTH_SERVICE_URL || 'http://localhost:8001',
-  flight: process.env.REACT_APP_FLIGHT_SERVICE_URL || 'http://localhost:8002',
-  booking: process.env.REACT_APP_BOOKING_SERVICE_URL || 'http://localhost:8003',
-  payment: process.env.REACT_APP_PAYMENT_SERVICE_URL || 'http://localhost:8004',
-  baggage: process.env.REACT_APP_BAGGAGE_SERVICE_URL || 'http://localhost:8005',
-  notification: process.env.REACT_APP_NOTIFICATION_SERVICE_URL || 'http://localhost:8006',
+  auth: isLocalhost ? 'http://localhost:8001' : '',
+  flight: isLocalhost ? 'http://localhost:8002' : '',
+  booking: isLocalhost ? 'http://localhost:8003' : '',
+  payment: isLocalhost ? 'http://localhost:8004' : '',
+  baggage: isLocalhost ? 'http://localhost:8005' : '',
+  notification: isLocalhost ? 'http://localhost:8006' : '',
 };
 
 // Global User Authentication Context
@@ -60,7 +63,7 @@ export default function App() {
       <div className="app-container">
         {/* Modern Header Navigation */}
         <header className="main-header">
-          <div className="header-brand">
+          <div className="header-brand" style={{ cursor: 'pointer' }} onClick={() => setActiveTab('flights')}>
             <span className="brand-logo">✈</span>
             <h1>AeroLink</h1>
             <span className="brand-badge">Aviation Hub</span>
@@ -157,7 +160,14 @@ function AuthPanel({ authView, setAuthView }) {
   };
 
   return (
-    <div className="auth-wrapper glass-panel animated-entry" style={{ maxWidth: '450px', margin: '3rem auto' }}>
+    <div className="auth-wrapper glass-panel animated-entry" style={{ maxWidth: '450px', margin: '3rem auto', position: 'relative' }}>
+      <button 
+        className="glass-button secondary" 
+        style={{ padding: '0.4rem 0.8rem', fontSize: '0.85rem', marginBottom: '1.5rem', display: 'inline-flex', alignItems: 'center', gap: '0.4rem' }}
+        onClick={() => setActiveTab('flights')}
+      >
+        ← Back to Flights
+      </button>
       <h2>{authView === 'login' ? 'Welcome Back' : 'Create AeroLink Account'}</h2>
       <p style={{ color: 'var(--text-secondary)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
         {authView === 'login' ? 'Access your flight itineraries and luggage logs' : 'Register for global flight tickets'}
