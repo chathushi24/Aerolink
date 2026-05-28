@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flight-service
+  namespace: aerolink
+  labels:
+    app: flight-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: flight-service
+  template:
+    metadata:
+      labels:
+        app: flight-service
+    spec:
+      containers:
+      - name: flight-service
+        image: <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/dev-aerolink-flight-service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8002
+        env:
+        - name: AWS_REGION
+          value: "us-east-1"
+        - name: FLIGHTS_TABLE_NAME
+          value: "dev-FlightsTable"
+        - name: SQS_FLIGHT_SEATS_QUEUE_URL
+          value: "https://sqs.us-east-1.amazonaws.com/<AWS_ACCOUNT_ID>/dev-aerolink-FlightSeatsQueue"
+        - name: JWT_SECRET
+          value: "aerolink-super-secret-jwt-key-2026"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8002
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8002
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: flight-service
+  namespace: aerolink
+spec:
+  selector:
+    app: flight-service
+  ports:
+    - protocol: TCP
+      port: 8002
+      targetPort: 8002
+  type: ClusterIP

@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: baggage-service
+  namespace: aerolink
+  labels:
+    app: baggage-service
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: baggage-service
+  template:
+    metadata:
+      labels:
+        app: baggage-service
+    spec:
+      containers:
+      - name: baggage-service
+        image: <AWS_ACCOUNT_ID>.dkr.ecr.us-east-1.amazonaws.com/dev-aerolink-baggage-service:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8005
+        env:
+        - name: AWS_REGION
+          value: "us-east-1"
+        - name: BAGGAGE_TABLE_NAME
+          value: "dev-BaggageTable"
+        - name: SQS_BAGGAGE_PROCESSING_QUEUE_URL
+          value: "https://sqs.us-east-1.amazonaws.com/<AWS_ACCOUNT_ID>/dev-aerolink-BaggageProcessingQueue"
+        - name: JWT_SECRET
+          value: "aerolink-super-secret-jwt-key-2026"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8005
+          initialDelaySeconds: 15
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8005
+          initialDelaySeconds: 10
+          periodSeconds: 5
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "250m"
+            memory: "256Mi"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: baggage-service
+  namespace: aerolink
+spec:
+  selector:
+    app: baggage-service
+  ports:
+    - protocol: TCP
+      port: 8005
+      targetPort: 8005
+  type: ClusterIP

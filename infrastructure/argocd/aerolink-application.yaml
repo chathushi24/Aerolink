@@ -1,0 +1,20 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: aerolink-platform
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/<GITHUB_USERNAME>/aerolink-platform.git'
+    targetRevision: HEAD
+    path: infrastructure/kubernetes
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: aerolink
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true

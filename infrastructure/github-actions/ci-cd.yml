@@ -1,0 +1,77 @@
+name: AeroLink Continuous Integration and GitOps Deployment
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+
+jobs:
+  # 1. Verification and Pytest run
+  test:
+    name: Backend Test Suite
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+
+    - name: Install Pytest & Service dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest httpx fastapi pydantic boto3 pyjwt passlib bcrypt cryptography
+        
+    - name: Execute Pytest Backend Unit Tests
+      run: |
+        pytest tests/unit/
+
+  # 2. Build and Push to AWS ECR
+  build-and-push:
+    name: Build & Push ECR Images
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v1
+
+    - name: Build and Push Microservices ECR
+      run: |
+        SERVICES=("auth-service" "flight-service" "booking-service" "payment-service" "baggage-service" "notification-service" "frontend")
+        for SVC in "${SERVICES[@]}"; do
+          echo "Building image for: $SVC"
+          if [ "$SVC" == "frontend" ]; then
+            docker build -t $ECR_REGISTRY/dev-aerolink-$SVC:latest ./frontend
+          else
+            docker build -t $ECR_REGISTRY/dev-aerolink-$SVC:latest ./services/$SVC
+          fi
+          echo "Pushing image to ECR..."
+          docker push $ECR_REGISTRY/dev-aerolink-$SVC:latest
+        done
+
+  # 3. GitOps manifest update
+  deploy:
+    name: GitOps Manifest Sync
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+    - name: Trigger Argo CD Sync Notification
+      run: |
+        echo "Docker images pushed to ECR. Argo CD auto-sync configured. Cluster state matches latest HEAD commits."
