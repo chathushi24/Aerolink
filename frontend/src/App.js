@@ -20,8 +20,91 @@ const AuthContext = createContext(null);
 export default function App() {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token') || '');
-  const [activeTab, setActiveTab] = useState('flights'); // flights, bookings, baggage, notifications, admin_flights, admin_baggage
+  const [activeTab, setActiveTab] = useState('flights'); // flights, bookings, baggage, notifications, admin_dashboard, admin_flights, admin_baggage
   const [authView, setAuthView] = useState('login'); // login, register
+
+  // Global Administration States
+  const [campaigns, setCampaigns] = useState(() => {
+    const saved = localStorage.getItem('campaigns');
+    return saved ? JSON.parse(saved) : [
+      { id: 'c1', name: 'Autumn Cherry Blossom Special', discount: 15, target: 'NRT', status: 'ACTIVE' },
+      { id: 'c2', name: 'London Winter Festive Tour', discount: 10, target: 'LHR', status: 'ACTIVE' },
+      { id: 'c3', name: 'Lahore Spring Festival Offer', discount: 20, target: 'LHE', status: 'ACTIVE' }
+    ];
+  });
+
+  const [airlines, setAirlines] = useState(() => {
+    const saved = localStorage.getItem('airlines');
+    return saved ? JSON.parse(saved) : [
+      { code: 'AL_MAIN', name: 'AeroLink Mainline', fleetSize: 42, status: 'ACTIVE' },
+      { code: 'AL_EXP', name: 'AeroLink Express', fleetSize: 18, status: 'ACTIVE' },
+      { code: 'AL_CARGO', name: 'AeroLink Cargo', fleetSize: 8, status: 'ACTIVE' },
+      { code: 'TG_AIR', name: 'TransGlobal Airlines (Partner)', fleetSize: 24, status: 'MAINTENANCE' },
+      { code: 'EF_AW', name: 'EuroFlight Airways (Partner)', fleetSize: 12, status: 'GROUNDED' }
+    ];
+  });
+
+  const [sectors, setSectors] = useState(() => {
+    const saved = localStorage.getItem('sectors');
+    return saved ? JSON.parse(saved) : [
+      { code: 'JFK', city: 'New York', country: 'United States' },
+      { code: 'LHR', city: 'London', country: 'United Kingdom' },
+      { code: 'NRT', city: 'Tokyo', country: 'Japan' },
+      { code: 'ORD', city: 'Chicago', country: 'United States' },
+      { code: 'LAX', city: 'Los Angeles', country: 'United States' },
+      { code: 'LHE', city: 'Lahore', country: 'Pakistan' },
+      { code: 'DXB', city: 'Dubai', country: 'United Arab Emirates' },
+      { code: 'SIN', city: 'Singapore', country: 'Singapore' },
+      { code: 'CDG', city: 'Paris', country: 'France' }
+    ];
+  });
+
+  const [consoleLogs, setConsoleLogs] = useState([
+    { time: '11:32:01', tag: 'immigration', msg: 'Clearance approved: Passenger John Doe (US-3829) for flight AL101.' },
+    { time: '11:32:05', tag: 'payment', msg: 'Stripe mock transaction succeeded: Billed $1,240.00 to Card VISA_TEST.' },
+    { time: '11:32:06', tag: 'eventbridge', msg: 'Event [BookingCreated] dispatched to SQS queues [FlightSeats, PaymentGateway].' },
+    { time: '11:32:08', tag: 'flight', msg: 'Asynchronously updated DynamoDB dev-FlightsTable. Decremented 2 seats.' },
+    { time: '11:32:10', tag: 'baggage', msg: 'Baggage auto-initialized for booking. Bag bag-9f201e loaded at JFK.' }
+  ]);
+
+  // Local storage persistence effects
+  useEffect(() => {
+    localStorage.setItem('campaigns', JSON.stringify(campaigns));
+  }, [campaigns]);
+
+  useEffect(() => {
+    localStorage.setItem('airlines', JSON.stringify(airlines));
+  }, [airlines]);
+
+  useEffect(() => {
+    localStorage.setItem('sectors', JSON.stringify(sectors));
+  }, [sectors]);
+
+  // Simulated integrations log stream
+  useEffect(() => {
+    const mockEvents = [
+      { tag: 'immigration', msg: 'Immigration security sweep completed for flight AL305. 0 alerts flagged.' },
+      { tag: 'payment', msg: 'Processed secure mock payment: booking-UUID settled via event bus.' },
+      { tag: 'eventbridge', msg: 'Event [PaymentCompleted] published. Routing to SQS Baggage and SQS Booking.' },
+      { tag: 'flight', msg: 'DynamoDB FlightsTable query processed: Route JFK -> NRT updated.' },
+      { tag: 'baggage', msg: 'Baggage transit scan: checked-in cargo updated at JFK_DEPARTURE_TERMINAL.' },
+      { tag: 'immigration', msg: 'Security gate validation: passport scan verified for passenger.' },
+      { tag: 'flight', msg: 'Airport ground control allocated Gate 24B for flight AL101.' },
+      { tag: 'eventbridge', msg: 'Rule dev-AllOperationalAlertsRule triggered. Forwarded notification log.' }
+    ];
+
+    const timer = setInterval(() => {
+      const randomEvent = mockEvents[Math.floor(Math.random() * mockEvents.length)];
+      const now = new Date();
+      const timeStr = now.toTimeString().split(' ')[0];
+      setConsoleLogs(prev => [
+        { time: timeStr, tag: randomEvent.tag, msg: randomEvent.msg },
+        ...prev.slice(0, 49) // Keep last 50 logs
+      ]);
+    }, 4000);
+
+    return () => clearInterval(timer);
+  }, []);
 
   // Bootstrapping: Load profile if token exists
   useEffect(() => {
@@ -33,7 +116,7 @@ export default function App() {
       .then(res => {
         setUser(res.data);
         if (res.data.role === 'STAFF' || res.data.role === 'ADMIN') {
-          setActiveTab('admin_flights');
+          setActiveTab('admin_dashboard');
         } else {
           setActiveTab('flights');
         }
@@ -59,7 +142,10 @@ export default function App() {
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, setToken, logout, getAxiosConfig, activeTab, setActiveTab, authView, setAuthView }}>
+    <AuthContext.Provider value={{ 
+      user, token, setToken, logout, getAxiosConfig, activeTab, setActiveTab, authView, setAuthView,
+      campaigns, setCampaigns, airlines, setAirlines, sectors, setSectors, consoleLogs, setConsoleLogs
+    }}>
       <div className="app-container">
         {/* Modern Header Navigation */}
         <header className="main-header">
@@ -81,8 +167,9 @@ export default function App() {
                   </>
                 ) : (
                   <>
-                    <button className={`nav-link ${activeTab === 'admin_flights' ? 'active' : ''}`} onClick={() => setActiveTab('admin_flights')}>Manage Flights</button>
-                    <button className={`nav-link ${activeTab === 'admin_baggage' ? 'active' : ''}`} onClick={() => setActiveTab('admin_baggage')}>Manage Baggage</button>
+                    <button className={`nav-link ${activeTab === 'admin_dashboard' ? 'active' : ''}`} onClick={() => setActiveTab('admin_dashboard')}>Control Tower</button>
+                    <button className={`nav-link ${activeTab === 'admin_flights' ? 'active' : ''}`} onClick={() => setActiveTab('admin_flights')}>Flight Operations</button>
+                    <button className={`nav-link ${activeTab === 'admin_baggage' ? 'active' : ''}`} onClick={() => setActiveTab('admin_baggage')}>Cargo Scanner</button>
                   </>
                 )}
                 <div className="user-indicator">
@@ -110,6 +197,7 @@ export default function App() {
           {activeTab === 'baggage' && <BaggageTracking />}
           {activeTab === 'notifications' && <NotificationLogs />}
           
+          {activeTab === 'admin_dashboard' && <AdminDashboardPanel />}
           {activeTab === 'admin_flights' && <AdminFlightManager />}
           {activeTab === 'admin_baggage' && <AdminBaggageManager />}
         </main>
@@ -222,7 +310,7 @@ function AuthPanel({ authView, setAuthView }) {
    COMPONENT: FLIGHT SEARCH & BOOKING CHECKOUT
    ========================================================================== */
 function FlightCatalog() {
-  const { user, getAxiosConfig, setActiveTab, setAuthView } = useContext(AuthContext);
+  const { user, getAxiosConfig, setActiveTab, setAuthView, campaigns } = useContext(AuthContext);
   const [flights, setFlights] = useState([]);
   const [origin, setOrigin] = useState('');
   const [destination, setDestination] = useState('');
@@ -235,6 +323,20 @@ function FlightCatalog() {
   const [cardToken, setCardToken] = useState('tok_mastercard'); // test card tokens
   const [bookingErr, setBookingErr] = useState('');
   const [bookingSuccessId, setBookingSuccessId] = useState('');
+
+  const getDiscountedPrice = (flight) => {
+    if (!campaigns) return { price: flight.price, discount: 0 };
+    const activeCampaigns = campaigns.filter(c => c.status === 'ACTIVE' && c.target.toUpperCase() === flight.destination.toUpperCase());
+    if (activeCampaigns.length > 0) {
+      const discount = activeCampaigns[0].discount;
+      return {
+        price: parseFloat((flight.price * (1 - discount / 100)).toFixed(2)),
+        discount,
+        campaignName: activeCampaigns[0].name
+      };
+    }
+    return { price: flight.price, discount: 0 };
+  };
 
   const fetchFlights = async () => {
     try {
@@ -336,12 +438,12 @@ function FlightCatalog() {
       <div className="search-widget-container">
         <form onSubmit={handleSearch} className="search-bar" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr)) 120px', gap: '1.25rem', alignItems: 'center' }}>
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label style={{ fontSize: '0.8rem' }}>Origin IATA</label>
-            <input className="glass-input" type="text" placeholder="e.g. JFK" value={origin} onChange={e => setOrigin(e.target.value)} maxLength={3} />
+            <label style={{ fontSize: '0.8rem' }}>Origin City/Airport</label>
+            <input className="glass-input" type="text" placeholder="e.g. New York or JFK" value={origin} onChange={e => setOrigin(e.target.value)} />
           </div>
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label style={{ fontSize: '0.8rem' }}>Destination IATA</label>
-            <input className="glass-input" type="text" placeholder="e.g. LHR" value={destination} onChange={e => setDestination(e.target.value)} maxLength={3} />
+            <label style={{ fontSize: '0.8rem' }}>Destination City/Airport</label>
+            <input className="glass-input" type="text" placeholder="e.g. London or LHR" value={destination} onChange={e => setDestination(e.target.value)} />
           </div>
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label style={{ fontSize: '0.8rem' }}>Travel Date</label>
@@ -359,44 +461,56 @@ function FlightCatalog() {
 
       {/* Flights Listing Cards */}
       <div className="flights-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1.5rem' }}>
-        {Array.isArray(flights) && flights.map(fl => (
-          <div key={fl.flight_id} className="flight-card">
-            <div className="flight-card-header">
-              <span className="flight-number">{fl.flight_number}</span>
-              <span className={`flight-status ${fl.status.toLowerCase()}`}>{fl.status}</span>
+        {Array.isArray(flights) && flights.map(fl => {
+          const campaignData = getDiscountedPrice(fl);
+          const hasDiscount = campaignData.discount > 0;
+          return (
+            <div key={fl.flight_id} className="flight-card">
+              <div className="flight-card-header">
+                <span className="flight-number">{fl.flight_number}</span>
+                <span className={`flight-status ${fl.status.toLowerCase()}`}>{fl.status}</span>
+              </div>
+              <div className="flight-route">
+                <div className="route-point">
+                  <h3>{fl.origin}</h3>
+                  <p>{new Date(fl.departure_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                </div>
+                <div className="route-connector">
+                  <span className="plane-icon">✈</span>
+                  <div className="connector-line"></div>
+                </div>
+                <div className="route-point">
+                  <h3>{fl.destination}</h3>
+                  <p>{new Date(fl.arrival_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                </div>
+              </div>
+              <div className="flight-details-row">
+                <div>
+                  <span className="label">Date</span>
+                  <p style={{ fontSize: '0.9rem' }}>{new Date(fl.departure_time).toLocaleDateString()}</p>
+                </div>
+                <div>
+                  <span className="label">Available Seats</span>
+                  <p style={{ fontSize: '0.9rem', color: fl.available_seats < 10 ? 'var(--error)' : 'var(--success)' }}>{fl.available_seats} / {fl.total_seats}</p>
+                </div>
+              </div>
+              <div className="flight-card-footer">
+                <h2 className="price">
+                  {hasDiscount && (
+                    <span className="original-price">{fl.price}</span>
+                  )}
+                  {campaignData.price}
+                  {hasDiscount && (
+                    <span className="discount-tag">{campaignData.discount}% Off SALE</span>
+                  )}
+                </h2>
+                <button className="glass-button" onClick={() => startBooking({...fl, price: campaignData.price})} disabled={fl.available_seats === 0}>
+                  {fl.available_seats === 0 ? 'Sold Out' : 'Book Ticket'}
+                </button>
+              </div>
             </div>
-            <div className="flight-route">
-              <div className="route-point">
-                <h3>{fl.origin}</h3>
-                <p>{new Date(fl.departure_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-              </div>
-              <div className="route-connector">
-                <span className="plane-icon">✈</span>
-                <div className="connector-line"></div>
-              </div>
-              <div className="route-point">
-                <h3>{fl.destination}</h3>
-                <p>{new Date(fl.arrival_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-              </div>
-            </div>
-            <div className="flight-details-row">
-              <div>
-                <span className="label">Date</span>
-                <p style={{ fontSize: '0.9rem' }}>{new Date(fl.departure_time).toLocaleDateString()}</p>
-              </div>
-              <div>
-                <span className="label">Available Seats</span>
-                <p style={{ fontSize: '0.9rem', color: fl.available_seats < 10 ? 'var(--error)' : 'var(--success)' }}>{fl.available_seats} / {fl.total_seats}</p>
-              </div>
-            </div>
-            <div className="flight-card-footer">
-              <h2 className="price">{fl.price}</h2>
-              <button className="glass-button" onClick={() => startBooking(fl)} disabled={fl.available_seats === 0}>
-                {fl.available_seats === 0 ? 'Sold Out' : 'Book Ticket'}
-              </button>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Featured Destinations */}
@@ -851,6 +965,19 @@ function AdminFlightManager() {
     }
   };
 
+  const handleDeleteFlight = async (flightId) => {
+    if (!window.confirm("Are you sure you want to delete this flight route? This will prune it permanently.")) return;
+    setSuccess('');
+    setErr('');
+    try {
+      await axios.delete(`${API_URLS.flight}/flights/${flightId}`, getAxiosConfig());
+      setSuccess('Flight route deleted successfully!');
+      fetchFlights();
+    } catch (error) {
+      setErr(error.response?.data?.detail || 'Delete flight route failed.');
+    }
+  };
+
   return (
     <div className="admin-flights animated-entry" style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: '2rem' }}>
       
@@ -870,11 +997,11 @@ function AdminFlightManager() {
           <div style={{ display: 'flex', gap: '1rem' }}>
             <div className="form-group" style={{ flex: 1 }}>
               <label>Origin IATA</label>
-              <input className="glass-input" type="text" placeholder="e.g. JFK" value={origin} onChange={e => setOrigin(e.target.value)} required maxLength={3} />
+              <input className="glass-input" type="text" placeholder="e.g. JFK" value={origin} onChange={e => setOrigin(e.target.value)} required />
             </div>
             <div className="form-group" style={{ flex: 1 }}>
               <label>Dest IATA</label>
-              <input className="glass-input" type="text" placeholder="e.g. LHR" value={destination} onChange={e => setDestination(e.target.value)} required maxLength={3} />
+              <input className="glass-input" type="text" placeholder="e.g. LHR" value={destination} onChange={e => setDestination(e.target.value)} required />
             </div>
           </div>
           <div className="form-group">
@@ -915,6 +1042,7 @@ function AdminFlightManager() {
               <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
                 <button className="glass-button secondary" style={{ padding: '0.35rem 0.7rem', fontSize: '0.8rem' }} onClick={() => { setSelectedFlight(fl); setNewPrice(fl.price); setNewDepTime(''); }}>Adjust Price</button>
                 <button className="glass-button secondary" style={{ padding: '0.35rem 0.7rem', fontSize: '0.8rem' }} onClick={() => { setSelectedFlight(fl); setNewPrice(''); setNewDepTime(fl.departure_time.slice(0, 16)); setNewArrTime(fl.arrival_time.slice(0, 16)); }}>Delay Route</button>
+                <button className="glass-button secondary" style={{ padding: '0.35rem 0.7rem', fontSize: '0.8rem', backgroundColor: 'rgba(239, 68, 68, 0.15)', color: 'var(--error)', borderColor: 'rgba(239, 68, 68, 0.25)' }} onClick={() => handleDeleteFlight(fl.flight_id)}>Delete Route</button>
               </div>
             </div>
           ))}
@@ -1047,6 +1175,349 @@ function AdminBaggageManager() {
           <button className="glass-button" style={{ width: '100%', marginTop: '1rem' }} onClick={handleUpdateStatus}>Publish Cargo Routing Updates</button>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ==========================================================================
+   COMPONENT: STAFF/ADMIN - CONTROL TOWER (Admin Dashboard Panel)
+   ========================================================================== */
+function AdminDashboardPanel() {
+  const { 
+    campaigns, setCampaigns, 
+    airlines, setAirlines, 
+    sectors, setSectors, 
+    consoleLogs 
+  } = useContext(AuthContext);
+
+  // States for new Sector creation
+  const [newSectorCode, setNewSectorCode] = useState('');
+  const [newSectorCity, setNewSectorCity] = useState('');
+  const [newSectorCountry, setNewSectorCountry] = useState('');
+
+  // States for new Discount Campaign creation
+  const [newCampaignName, setNewCampaignName] = useState('');
+  const [newCampaignDiscount, setNewCampaignDiscount] = useState(15);
+  const [newCampaignTarget, setNewCampaignTarget] = useState('LHR');
+  
+  const [successMsg, setSuccessMsg] = useState('');
+
+  // Handler to add a new Sector
+  const handleAddSector = (e) => {
+    e.preventDefault();
+    if (!newSectorCode || !newSectorCity || !newSectorCountry) return;
+    const newSec = {
+      code: newSectorCode.toUpperCase().trim(),
+      city: newSectorCity.trim(),
+      country: newSectorCountry.trim()
+    };
+    if (sectors.find(s => s.code === newSec.code)) {
+      alert("Sector code already exists!");
+      return;
+    }
+    const updated = [...sectors, newSec];
+    setSectors(updated);
+    setNewSectorCode('');
+    setNewSectorCity('');
+    setNewSectorCountry('');
+    showSuccess("Sector registered successfully!");
+  };
+
+  // Handler to add a new Discount Campaign
+  const handleAddCampaign = (e) => {
+    e.preventDefault();
+    if (!newCampaignName || !newCampaignTarget) return;
+    const newCamp = {
+      id: 'c_' + Date.now(),
+      name: newCampaignName.trim(),
+      discount: parseInt(newCampaignDiscount),
+      target: newCampaignTarget.toUpperCase().trim(),
+      status: 'ACTIVE'
+    };
+    const updated = [...campaigns, newCamp];
+    setCampaigns(updated);
+    setNewCampaignName('');
+    setNewCampaignDiscount(15);
+    setNewCampaignTarget('LHR');
+    showSuccess("Seasonal discount campaign created!");
+  };
+
+  const showSuccess = (msg) => {
+    setSuccessMsg(msg);
+    setTimeout(() => setSuccessMsg(''), 4000);
+  };
+
+  // Toggle partner airline status
+  const handleToggleAirlineStatus = (airlineCode, nextStatus) => {
+    const updated = airlines.map(al => {
+      if (al.code === airlineCode) {
+        return { ...al, status: nextStatus };
+      }
+      return al;
+    });
+    setAirlines(updated);
+  };
+
+  // Delete Campaign
+  const handleDeleteCampaign = (id) => {
+    setCampaigns(campaigns.filter(c => c.id !== id));
+    showSuccess("Campaign deleted.");
+  };
+
+  // Toggle Campaign status
+  const handleToggleCampaignStatus = (id) => {
+    const updated = campaigns.map(c => {
+      if (c.id === id) {
+        return { ...c, status: c.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE' };
+      }
+      return c;
+    });
+    setCampaigns(updated);
+  };
+
+  return (
+    <div className="admin-dashboard-container">
+      {/* Welcome & Dashboard header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h2 style={{ fontSize: '2rem' }}>AeroLink Control Tower</h2>
+          <p style={{ color: 'var(--text-secondary)' }}>Global system operations, fleet statuses, active discount channels, and SQS network integrations</p>
+        </div>
+        {successMsg && <div className="alert success" style={{ marginBottom: 0, padding: '0.5rem 1rem' }}>{successMsg}</div>}
+      </div>
+
+      {/* KPI Cards Row */}
+      <div className="kpi-row">
+        <div className="kpi-card">
+          <span className="kpi-title">Total Revenue</span>
+          <span className="kpi-value">$7,480.00</span>
+          <span className="kpi-trend positive">↑ 12.4% vs last week</span>
+          <div className="sparkline-container">
+            <div className="sparkbar" style={{ height: '35%' }}></div>
+            <div className="sparkbar" style={{ height: '45%' }}></div>
+            <div className="sparkbar" style={{ height: '60%' }}></div>
+            <div className="sparkbar" style={{ height: '50%' }}></div>
+            <div className="sparkbar" style={{ height: '75%' }}></div>
+            <div className="sparkbar active" style={{ height: '90%' }}></div>
+          </div>
+        </div>
+
+        <div className="kpi-card">
+          <span className="kpi-title">Operational Bookings</span>
+          <span className="kpi-value">14 Tickets</span>
+          <span className="kpi-trend positive">✓ 98.4% SQS delivery success</span>
+          <div className="sparkline-container">
+            <div className="sparkbar" style={{ height: '40%' }}></div>
+            <div className="sparkbar" style={{ height: '55%' }}></div>
+            <div className="sparkbar" style={{ height: '45%' }}></div>
+            <div className="sparkbar" style={{ height: '70%' }}></div>
+            <div className="sparkbar active" style={{ height: '85%' }}></div>
+            <div className="sparkbar active" style={{ height: '95%' }}></div>
+          </div>
+        </div>
+
+        <div className="kpi-card">
+          <span className="kpi-title">Sector Utilization</span>
+          <span className="kpi-value">84.2%</span>
+          <span className="kpi-trend neutral">→ Average occupancy stable</span>
+          <div className="sparkline-container">
+            <div className="sparkbar" style={{ height: '70%' }}></div>
+            <div className="sparkbar" style={{ height: '75%' }}></div>
+            <div className="sparkbar" style={{ height: '80%' }}></div>
+            <div className="sparkbar" style={{ height: '82%' }}></div>
+            <div className="sparkbar active" style={{ height: '85%' }}></div>
+            <div className="sparkbar active" style={{ height: '84%' }}></div>
+          </div>
+        </div>
+
+        <div className="kpi-card">
+          <span className="kpi-title">AWS Service Health</span>
+          <div style={{ marginTop: '0.5rem', display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem' }}>
+              <span>EKS Pods</span>
+              <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success)', boxShadow: '0 0 8px var(--success)' }}></span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem' }}>
+              <span>SQS Queues</span>
+              <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success)', boxShadow: '0 0 8px var(--success)' }}></span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem' }}>
+              <span>EventBridge</span>
+              <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success)', boxShadow: '0 0 8px var(--success)' }}></span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.8rem' }}>
+              <span>DynamoDB</span>
+              <span style={{ display: 'inline-block', width: '8px', height: '8px', borderRadius: '50%', background: 'var(--success)', boxShadow: '0 0 8px var(--success)' }}></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Grid: Left column (Fleet & Sectors), Right column (Campaigns & Live terminal) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', gap: '2rem' }}>
+        
+        {/* Left Column */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          
+          {/* Partner Fleet Management */}
+          <div className="glass-panel">
+            <h3>Partner Fleet Management</h3>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.25rem', fontSize: '0.85rem' }}>Track aircraft carriers, fleet inventory, and current operational states</p>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                <thead>
+                  <tr style={{ borderBottom: '1px solid var(--border-glass)' }}>
+                    <th style={{ padding: '0.75rem 0.5rem' }}>Airline Code</th>
+                    <th style={{ padding: '0.75rem 0.5rem' }}>Carrier Name</th>
+                    <th style={{ padding: '0.75rem 0.5rem' }}>Fleets</th>
+                    <th style={{ padding: '0.75rem 0.5rem' }}>Status</th>
+                    <th style={{ padding: '0.75rem 0.5rem' }}>Prune/Change</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {airlines.map(al => (
+                    <tr key={al.code} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                      <td style={{ padding: '0.75rem 0.5rem', fontFamily: 'monospace' }}>{al.code}</td>
+                      <td style={{ padding: '0.75rem 0.5rem', fontWeight: '500' }}>{al.name}</td>
+                      <td style={{ padding: '0.75rem 0.5rem' }}>{al.fleetSize} planes</td>
+                      <td style={{ padding: '0.75rem 0.5rem' }}>
+                        <span className={`airline-pill ${al.status.toLowerCase()}`}>{al.status}</span>
+                      </td>
+                      <td style={{ padding: '0.75rem 0.5rem' }}>
+                        <select 
+                          className="glass-input" 
+                          style={{ padding: '0.2rem 0.4rem', fontSize: '0.75rem', width: 'auto' }}
+                          value={al.status}
+                          onChange={(e) => handleToggleAirlineStatus(al.code, e.target.value)}
+                        >
+                          <option value="ACTIVE">ACTIVE</option>
+                          <option value="MAINTENANCE">MAINTENANCE</option>
+                          <option value="GROUNDED">GROUNDED</option>
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Global Sector Register */}
+          <div className="glass-panel">
+            <h3>Global Sector Register</h3>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.25rem', fontSize: '0.85rem' }}>Map active airports and destinations supported by AeroLink</p>
+            
+            <form onSubmit={handleAddSector} style={{ display: 'grid', gridTemplateColumns: '80px 1fr 1fr 90px', gap: '0.5rem', alignItems: 'end', marginBottom: '1.5rem' }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label style={{ fontSize: '0.7rem' }}>IATA</label>
+                <input className="glass-input" style={{ padding: '0.5rem' }} type="text" placeholder="DXB" value={newSectorCode} onChange={e => setNewSectorCode(e.target.value)} required />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label style={{ fontSize: '0.7rem' }}>City</label>
+                <input className="glass-input" style={{ padding: '0.5rem' }} type="text" placeholder="Dubai" value={newSectorCity} onChange={e => setNewSectorCity(e.target.value)} required />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label style={{ fontSize: '0.7rem' }}>Country</label>
+                <input className="glass-input" style={{ padding: '0.5rem' }} type="text" placeholder="U.A.E." value={newSectorCountry} onChange={e => setNewSectorCountry(e.target.value)} required />
+              </div>
+              <button className="glass-button" style={{ padding: '0.6rem 0.8rem', fontSize: '0.8rem' }} type="submit">Add</button>
+            </form>
+
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+              {sectors.map(sec => (
+                <div key={sec.code} className="hub-pill" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.4rem 0.6rem' }}>
+                  <strong style={{ color: 'var(--accent-primary)' }}>{sec.code}</strong>
+                  <span>{sec.city}, {sec.country}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Column */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+          
+          {/* Discount Campaign Manager */}
+          <div className="glass-panel">
+            <h3>Seasonal Discount Campaigns</h3>
+            <p style={{ color: 'var(--text-secondary)', marginBottom: '1.25rem', fontSize: '0.85rem' }}>Setup discount tariffs mapped to target flight sectors (reflected instantly in searches!)</p>
+
+            <form onSubmit={handleAddCampaign} style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr auto', gap: '0.5rem', alignItems: 'end', marginBottom: '1.5rem' }}>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label style={{ fontSize: '0.7rem' }}>Campaign Name</label>
+                <input className="glass-input" style={{ padding: '0.5rem' }} type="text" placeholder="Cherry Blossom Fest" value={newCampaignName} onChange={e => setNewCampaignName(e.target.value)} required />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label style={{ fontSize: '0.7rem' }}>Discount %</label>
+                <input className="glass-input" style={{ padding: '0.5rem' }} type="number" min={5} max={80} value={newCampaignDiscount} onChange={e => setNewCampaignDiscount(e.target.value)} required />
+              </div>
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label style={{ fontSize: '0.7rem' }}>Target IATA</label>
+                <select className="glass-input" style={{ padding: '0.45rem' }} value={newCampaignTarget} onChange={e => setNewCampaignTarget(e.target.value)}>
+                  {sectors.map(s => (
+                    <option key={s.code} value={s.code}>{s.code}</option>
+                  ))}
+                </select>
+              </div>
+              <button className="glass-button" style={{ padding: '0.6rem 0.8rem', fontSize: '0.8rem' }} type="submit">Create</button>
+            </form>
+
+            <div className="campaign-grid">
+              {campaigns.map(camp => (
+                <div key={camp.id} className={`campaign-card ${camp.status === 'ACTIVE' ? 'active-campaign' : ''}`}>
+                  <span className="campaign-badge">{camp.discount}% Off</span>
+                  <h4>{camp.name}</h4>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: '0.2rem 0' }}>Sector Destination: <strong style={{ color: 'var(--accent-secondary)' }}>{camp.target}</strong></p>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Status: {camp.status}</p>
+                  
+                  <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.75rem' }}>
+                    <button 
+                      className="glass-button secondary" 
+                      style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem' }}
+                      onClick={() => handleToggleCampaignStatus(camp.id)}
+                    >
+                      {camp.status === 'ACTIVE' ? 'Disable' : 'Enable'}
+                    </button>
+                    <button 
+                      className="glass-button secondary" 
+                      style={{ padding: '0.2rem 0.5rem', fontSize: '0.75rem', backgroundColor: 'rgba(239, 68, 68, 0.05)', color: 'var(--error)' }}
+                      onClick={() => handleDeleteCampaign(camp.id)}
+                    >
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Real-time Event Integrations Console Terminal */}
+          <div className="terminal-panel">
+            <div className="terminal-header">
+              <div className="terminal-dots">
+                <span className="term-dot red"></span>
+                <span className="term-dot yellow"></span>
+                <span className="term-dot green"></span>
+              </div>
+              <span className="terminal-title">INTEGRATIONS CONTROLLER STREAM</span>
+              <span style={{ fontSize: '0.7rem', color: 'var(--success)', fontFamily: 'monospace' }}>● ONLINE</span>
+            </div>
+            
+            <div className="terminal-console">
+              {consoleLogs.map((log, index) => (
+                <div key={index} className="terminal-log-line">
+                  <span className="timestamp">[{log.time}]</span>
+                  <span className={`tag ${log.tag}`}>{log.tag}</span>
+                  <span className="message">{log.msg}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
     </div>
   );
 }

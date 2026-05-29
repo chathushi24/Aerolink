@@ -901,3 +901,321 @@ table td {
   background: rgba(99, 102, 241, 0.4);
 }
 
+/* ==========================================================================
+   ADMIN SYSTEM DASHBOARD STYLES
+   ========================================================================== */
+.admin-dashboard-container {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.kpi-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1.5rem;
+}
+
+.kpi-card {
+  display: flex;
+  flex-direction: column;
+  padding: 1.5rem;
+  background: var(--bg-glass);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--border-radius-md);
+  box-shadow: var(--shadow-sm);
+  position: relative;
+  overflow: hidden;
+  transition: var(--transition-smooth);
+}
+
+.kpi-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--accent-gradient);
+}
+
+.kpi-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(99, 102, 241, 0.25);
+  box-shadow: var(--shadow-lg), 0 0 20px rgba(99, 102, 241, 0.05);
+}
+
+.kpi-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.kpi-value {
+  font-family: 'Outfit', sans-serif;
+  font-size: 2.2rem;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 0.25rem;
+  letter-spacing: -0.02em;
+}
+
+.kpi-trend {
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.kpi-trend.positive {
+  color: var(--success);
+}
+
+.kpi-trend.neutral {
+  color: var(--warning);
+}
+
+/* Micro Sparkline simulation */
+.sparkline-container {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 35px;
+  margin-top: 0.75rem;
+}
+
+.sparkbar {
+  flex: 1;
+  background: rgba(99, 102, 241, 0.15);
+  border-radius: 2px;
+  transition: height 0.5s ease-out;
+}
+
+.sparkbar.active {
+  background: var(--accent-gradient);
+  box-shadow: 0 0 8px rgba(168, 85, 247, 0.4);
+}
+
+/* Operational Console terminal */
+.terminal-panel {
+  background: #020617;
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: var(--border-radius-md);
+  padding: 1.25rem;
+  font-family: 'Courier New', Courier, monospace;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.8), var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+}
+
+.terminal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding-bottom: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.terminal-dots {
+  display: flex;
+  gap: 6px;
+}
+
+.term-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.term-dot.red { background: #ef4444; }
+.term-dot.yellow { background: #f59e0b; }
+.term-dot.green { background: #10b981; }
+
+.terminal-title {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  font-weight: bold;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.terminal-console {
+  height: 220px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding-right: 0.5rem;
+}
+
+.terminal-log-line {
+  font-size: 0.85rem;
+  line-height: 1.4;
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+.terminal-log-line .timestamp {
+  color: var(--text-muted);
+  margin-right: 0.5rem;
+}
+
+.terminal-log-line .tag {
+  font-weight: bold;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  margin-right: 0.5rem;
+  text-transform: uppercase;
+}
+
+.terminal-log-line .tag.payment {
+  background: rgba(168, 85, 247, 0.15);
+  color: #c084fc;
+}
+
+.terminal-log-line .tag.immigration {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+}
+
+.terminal-log-line .tag.eventbridge {
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+}
+
+.terminal-log-line .tag.flight {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+}
+
+.terminal-log-line .tag.baggage {
+  background: rgba(239, 68, 68, 0.15);
+  color: #f87171;
+}
+
+.terminal-log-line .message {
+  color: #e2e8f0;
+}
+
+.terminal-console::-webkit-scrollbar {
+  width: 4px;
+}
+.terminal-console::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.2);
+}
+
+/* Campaign Center styles */
+.campaign-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.campaign-card {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-glass);
+  border-radius: var(--border-radius-sm);
+  padding: 1.25rem;
+  position: relative;
+  overflow: hidden;
+  transition: var(--transition-smooth);
+}
+
+.campaign-card.active-campaign {
+  border-color: rgba(168, 85, 247, 0.35);
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.05);
+}
+
+.campaign-badge {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+  color: #fff;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 800;
+  font-size: 0.8rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.3);
+}
+
+.campaign-card h4 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 0.4rem;
+  color: #fff;
+}
+
+/* Sales tags on Flight Catalog */
+.original-price {
+  font-size: 1.1rem !important;
+  color: var(--text-muted) !important;
+  text-decoration: line-through;
+  margin-right: 0.5rem;
+  font-weight: 500 !important;
+}
+
+.original-price::before {
+  content: '$' !important;
+  font-size: 0.85rem !important;
+}
+
+.discount-tag {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: #a855f7;
+  background: rgba(168, 85, 247, 0.1);
+  border: 1px solid rgba(168, 85, 247, 0.2);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  vertical-align: middle;
+  margin-left: 0.5rem;
+  letter-spacing: 0.05em;
+  box-shadow: 0 0 8px rgba(168, 85, 247, 0.1);
+  animation: pulse-glow 1.5s infinite alternate;
+}
+
+@keyframes pulse-glow {
+  from { box-shadow: 0 0 4px rgba(168, 85, 247, 0.1); }
+  to { box-shadow: 0 0 12px rgba(168, 85, 247, 0.3); }
+}
+
+.airline-pill, .hub-pill {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.6rem;
+  border-radius: 4px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--border-glass);
+  color: var(--text-secondary);
+}
+
+.airline-pill.active {
+  border-color: rgba(16, 185, 129, 0.2);
+  color: var(--success);
+  background: rgba(16, 185, 129, 0.05);
+}
+
+.airline-pill.maintenance {
+  border-color: rgba(245, 158, 11, 0.2);
+  color: var(--warning);
+  background: rgba(245, 158, 11, 0.05);
+}
+
+.airline-pill.grounded {
+  border-color: rgba(239, 68, 68, 0.2);
+  color: var(--error);
+  background: rgba(239, 68, 68, 0.05);
+}
+
+
