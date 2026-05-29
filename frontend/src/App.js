@@ -549,7 +549,7 @@ function FlightCatalog() {
             </div>
           </div>
           <div className="destination-card">
-            <div className="destination-img" style={{ backgroundImage: 'linear-gradient(135deg, #1e1b4b 0%, #311042 100%)' }}></div>
+            <div className="destination-img" style={{ backgroundImage: 'url(/london_destination.png)' }}></div>
             <div className="destination-overlay"></div>
             <span className="destination-tag">Popular</span>
             <div className="destination-info">
