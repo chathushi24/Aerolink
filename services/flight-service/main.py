@@ -288,10 +288,11 @@ def patch_flight_price(flight_id: str, price_patch: FlightPricePatch, current_us
     table = get_flights_table()
     
     try:
+        from decimal import Decimal
         response = table.update_item(
             Key={"flight_id": flight_id},
             UpdateExpression="SET price = :p",
-            ExpressionAttributeValues={":p": float(price_patch.price)},
+            ExpressionAttributeValues={":p": Decimal(str(price_patch.price))},
             ReturnValues="ALL_NEW"
         )
         updated = response.get("Attributes")
