@@ -139,29 +139,61 @@ def create_flight(flight: FlightCreate, current_user: dict = Depends(admin_or_st
         logger.error(f"Error saving flight record to AWS DynamoDB: {str(e)}")
         raise HTTPException(status_code=500, detail="Database write failed")
 
+# Free-form airport city/country mapping dictionary
+AIRPORT_MAP = {
+    "JFK": ["JFK", "NEW YORK", "NYC", "UNITED STATES", "USA", "AMERICA"],
+    "LHR": ["LHR", "LONDON", "HEATHROW", "UNITED KINGDOM", "UK", "ENGLAND", "GREAT BRITAIN"],
+    "NRT": ["NRT", "TOKYO", "NARITA", "JAPAN", "TOKYO NARITA"],
+    "ORD": ["ORD", "CHICAGO", "O'HARE", "UNITED STATES", "USA", "ILLINOIS"],
+    "LAX": ["LAX", "LOS ANGELES", "CALIFORNIA", "USA", "UNITED STATES"],
+    "LHE": ["LHE", "LAHORE", "ALLAMA IQBAL", "PAKISTAN"],
+    "DXB": ["DXB", "DUBAI", "UNITED ARAB EMIRATES", "UAE"],
+    "SIN": ["SIN", "SINGAPORE", "CHANGI"],
+    "CDG": ["CDG", "PARIS", "CHARLES DE GAULLE", "FRANCE"]
+}
+
+def resolve_iata(search_str: Optional[str]) -> Optional[str]:
+    """Helper to resolve free-form city/country names to 3-letter IATA codes."""
+    if not search_str:
+        return None
+    
+    s = search_str.strip().upper()
+    if len(s) == 3:
+        return s
+        
+    for iata, keywords in AIRPORT_MAP.items():
+        for kw in keywords:
+            if s in kw or kw in s:
+                return iata
+                
+    return s
+
 @app.get("/flights", response_model=List[FlightOut], tags=["Flights"])
 def get_flights(
-    origin: Optional[str] = Query(None, min_length=3, max_length=3),
-    destination: Optional[str] = Query(None, min_length=3, max_length=3),
-    date: Optional[str] = Query(None, description="Format YYYY-MM-DD")
+    origin: Optional[str] = Query(None),
+    destination: Optional[str] = Query(None),
+    date: Optional[str] = Query(None)
 ):
     table = get_flights_table()
     
+    resolved_origin = resolve_iata(origin)
+    resolved_destination = resolve_iata(destination)
+    
     try:
-        if origin and destination:
+        if resolved_origin and resolved_destination:
             response = table.query(
                 IndexName="RouteIndex",
-                KeyConditionExpression=Key("origin").eq(origin.upper()) & Key("destination").eq(destination.upper())
+                KeyConditionExpression=Key("origin").eq(resolved_origin.upper()) & Key("destination").eq(resolved_destination.upper())
             )
             items = response.get("Items", [])
         else:
             response = table.scan()
             items = response.get("Items", [])
             
-            if origin:
-                items = [x for x in items if x["origin"] == origin.upper()]
-            if destination:
-                items = [x for x in items if x["destination"] == destination.upper()]
+            if resolved_origin:
+                items = [x for x in items if x["origin"] == resolved_origin.upper()]
+            if resolved_destination:
+                items = [x for x in items if x["destination"] == resolved_destination.upper()]
                 
         if date:
             items = [x for x in items if x["departure_time"].startswith(date)]
@@ -307,6 +339,22 @@ def patch_flight_schedule(flight_id: str, schedule_patch: FlightSchedulePatch, c
     except Exception as e:
         logger.error(f"Error patching schedule for flight {flight_id}: {str(e)}")
         raise HTTPException(status_code=500, detail="Database patch failed")
+
+@app.delete("/flights/{flight_id}", status_code=status.HTTP_204_NO_CONTENT, tags=["Flights"])
+def delete_flight(flight_id: str, current_user: dict = Depends(admin_or_staff)):
+    table = get_flights_table()
+    
+    response = table.get_item(Key={"flight_id": flight_id})
+    if not response.get("Item"):
+        raise HTTPException(status_code=404, detail="Flight not found")
+        
+    try:
+        table.delete_item(Key={"flight_id": flight_id})
+        logger.info(f"Flight {flight_id} deleted from AWS by {current_user.get('email')}")
+        return
+    except Exception as e:
+        logger.error(f"Error deleting flight {flight_id}: {str(e)}")
+        raise HTTPException(status_code=500, detail="Database delete failed")
 
 if __name__ == "__main__":
     import uvicorn
