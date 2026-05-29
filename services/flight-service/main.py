@@ -149,7 +149,8 @@ AIRPORT_MAP = {
     "LHE": ["LHE", "LAHORE", "ALLAMA IQBAL", "PAKISTAN"],
     "DXB": ["DXB", "DUBAI", "UNITED ARAB EMIRATES", "UAE"],
     "SIN": ["SIN", "SINGAPORE", "CHANGI"],
-    "CDG": ["CDG", "PARIS", "CHARLES DE GAULLE", "FRANCE"]
+    "CDG": ["CDG", "PARIS", "CHARLES DE GAULLE", "FRANCE"],
+    "CMB": ["CMB", "COLOMBO", "SRI LANKA", "BANDARANAIKE"]
 }
 
 def resolve_iata(search_str: Optional[str]) -> Optional[str]:
